@@ -99,9 +99,8 @@ add_suffix:
 	call os_string_length
 	cmp rcx, 8
 	jg fail				; If the string is longer than 8 chars we can't add a suffix
-
 	mov rdi, cli_command_string
-	mov rsi, appextension		; '.APP'
+	mov rsi, appextension		; '.app'
 	call os_string_append		; Append the extension to the command string
 
 ; cli_command_string now contains a full filename
@@ -172,11 +171,13 @@ debug:
 	jl noamount			; If not no amount was specified
 	mov al, 2
 	call os_get_argv		; Get the amount of bytes to display
+	mov rsi, rax
 	call os_string_to_int		; Convert to an integer
 	mov rcx, rax
 noamount:
 	mov al, 1
 	call os_get_argv		; Get the starting memory address
+	mov rsi, rax
 	call os_hex_string_to_int
 	mov rsi, rax
 debug_default:
@@ -206,6 +207,8 @@ exit:
 	reboot_string		db 'reboot', 0
 	testzone_string		db 'testzone', 0
 
+	appextension:		db '.app', 0
+	prompt:			db '> ', 0
 
 ; -----------------------------------------------------------------------------
 ; os_string_find_char -- Find first location of character in a string

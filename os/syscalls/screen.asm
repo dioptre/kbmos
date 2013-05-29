@@ -199,6 +199,8 @@ os_output_chars_nextchar:
 	je os_output_chars_newline	; If so then we print a new line
 	cmp al, 10			; Check if there was a newline character in the string
 	je os_output_chars_newline	; If so then we print a new line
+	cmp al, 9
+	je os_output_chars_tab
 	mov rdi, [screen_cursor_offset]
 	stosw				; Write the character and attribute with one call
 	call os_inc_cursor
@@ -219,6 +221,25 @@ os_output_chars_newline_skip_LF_nosub:
 	add rsi, 1
 	call os_print_newline
 	jmp os_output_chars_nextchar	
+
+os_output_chars_tab:
+	push rcx
+	mov al, [screen_cursor_x]	; Grab the current cursor X value (ex 7)
+	mov cl, al
+	add al, 8			; Add 8 (ex 15)
+	shr al, 3			; Clear lowest 3 bits (ex 8)
+	shl al, 3			; Bug? 'xor al, 7' doesn't work...
+	sub al, cl			; (ex 8 - 7 = 1)
+	mov cl, al
+	mov al, ' '
+os_output_chars_tab_next:
+	stosw				; Write the character and attribute with one call
+	call os_inc_cursor
+	sub cl, 1
+	cmp cl, 0
+	jne os_output_chars_tab_next
+	pop rcx
+	jmp os_output_chars_nextchar
 
 os_output_chars_done:
 	call os_screen_update
@@ -266,6 +287,11 @@ os_screen_scroll:
 	cmp byte [os_show_sysstatus], 0
 	je os_screen_scroll_no_sysstatus
 
+	mov rsi, os_screen 		; Start of video text memory for row 2
+	add rsi, 0xa0
+	mov rdi, os_screen 		; Start of video text memory for row 1
+	mov rcx, 72			; 80 - 8
+	rep movsw			; Copy the Character and Attribute
 	mov rsi, os_screen		; Start of video text memory for row 3
 	add rsi, 0x140
 	mov rdi, os_screen		; Start of video text memory for row 2
@@ -307,23 +333,11 @@ os_screen_clear:
 	push rcx
 	push rax
 
-	cmp byte [os_show_sysstatus], 0
-	je os_screen_clear_no_sysstatus
-
-	mov ax, 0x0720		; 0x07 for black background/white foreground, 0x20 for space (black) character
-	mov rdi, os_screen	; Address for start of color video memory
-	add rdi, 160		; Offset to second row
-	mov rcx, 1920		; 80 x 25 - 80
-	rep stosw		; Clear the screen. Store word in AX to RDI, RCX times
-	jmp os_screen_clear_done
-
-os_screen_clear_no_sysstatus:
 	mov ax, 0x0720		; 0x07 for black background/white foreground, 0x20 for space (black) character
 	mov rdi, os_screen	; Address for start of color video memory
 	mov rcx, 2000
 	rep stosw		; Clear the screen. Store word in AX to RDI, RCX times
 
-os_screen_clear_done:
 	call os_screen_update	; Copy the video buffer to video memory
 
 	pop rax

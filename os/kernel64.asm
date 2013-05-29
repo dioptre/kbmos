@@ -9,7 +9,7 @@
 USE64
 ORG 0x0000000000100000
 
-%DEFINE BAREMETALOS_VER 'v0.6.1-dev (May 10, 2013)', 13, 'Copyright (C) 2008-2013 Return Infinity', 13, 0
+%DEFINE BAREMETALOS_VER 'v0.6.1-dev (May 18, 2013)', 13, 'Copyright (C) 2008-2013 Return Infinity', 13, 0
 %DEFINE BAREMETALOS_API_VER 2
 
 kernel_start:
@@ -18,113 +18,48 @@ kernel_start:
 	db 'BAREMETAL'
 
 	align 16		; 0x0010
-	jmp os_output		; Jump to function
-	align 8
-	dq os_output		; Memory address of function
-
-	align 8			; 0x0020
-	jmp os_output_chars
-	align 8
+	dq os_output
+	align 8			; 0x0018
 	dq os_output_chars
-
-	align 8			; 0x0030
-	jmp os_input
-	align 8
+	align 8			; 0x0020
 	dq os_input
-
-	align 8			; 0x0040
-	jmp os_input_key
-	align 8
+	align 8			; 0x0028
 	dq os_input_key
-
-	align 8			; 0x0050
-	jmp os_smp_enqueue
-	align 8
+	align 8			; 0x0030
 	dq os_smp_enqueue
-
-	align 8			; 0x0060
-	jmp os_smp_dequeue
-	align 8
+	align 8			; 0x0038
 	dq os_smp_dequeue
-
-	align 8			; 0x0070
-	jmp os_smp_run
-	align 8
+	align 8			; 0x0040
 	dq os_smp_run
-
-	align 8			; 0x0080
-	jmp os_smp_wait
-	align 8
+	align 8			; 0x0048
 	dq os_smp_wait
-
-	align 8			; 0x0090
-	jmp os_mem_allocate
-	align 8
+	align 8			; 0x0050
 	dq os_mem_allocate
-
-	align 8			; 0x00A0
-	jmp os_mem_release
-	align 8
+	align 8			; 0x0058
 	dq os_mem_release
-
-	align 8			; 0x00B0
-	jmp os_ethernet_tx
-	align 8
+	align 8			; 0x0060
 	dq os_ethernet_tx
-
-	align 8			; 0x00C0
-	jmp os_ethernet_rx
-	align 8
+	align 8			; 0x0068
 	dq os_ethernet_rx
-
-	align 8			; 0x00D0
-	jmp os_file_open
-	align 8
+	align 8			; 0x0070
 	dq os_file_open
-
-	align 8			; 0x00E0
-	jmp os_file_close
-	align 8
+	align 8			; 0x0078
 	dq os_file_close
-
-	align 8			; 0x00F0
-	jmp os_file_read
-	align 8
+	align 8			; 0x0080
 	dq os_file_read
-
-	align 8			; 0x0100
-	jmp os_file_write
-	align 8
+	align 8			; 0x0088
 	dq os_file_write
-
-	align 8			; 0x0110
-	jmp os_file_seek
-	align 8
+	align 8			; 0x0090
 	dq os_file_seek
-
-	align 8			; 0x0120
-	jmp os_file_query
-	align 8
+	align 8			; 0x0098
 	dq os_file_query
-
-	align 8			; 0x0130
-	jmp os_file_create
-	align 8
+	align 8			; 0x00A0
 	dq os_file_create
-
-	align 8			; 0x0140
-	jmp os_file_delete
-	align 8
+	align 8			; 0x00A8
 	dq os_file_delete
-
-	align 8			; 0x0150
-	jmp os_system_config
-	align 8
+	align 8			; 0x00B0
 	dq os_system_config
-
-	align 8			; 0x0160
-	jmp os_system_misc
-	align 8
+	align 8			; 0x00B8
 	dq os_system_misc
 
 
@@ -146,31 +81,11 @@ start:
 	mov rsi, readymsg
 	call os_output
 
-	mov ax, 0x0018			; Set the hardware cursor to the bottom left-hand corner
+	mov ax, 0x0018			; Set the cursor to the bottom left-hand corner
 	call os_move_cursor
 
-; DEV TESTING
-;	mov rsi, Filename1
-;	call os_bmfs_file_query
-;	call os_bmfs_file_read
-;	call os_debug_dump_reg
-;	jmp $
-;Filename1: db "Another file.app", 0
-;	mov rbx, hellofunc
-;	mov [os_NetworkCallback], rbx
-
-;	mov rax, 0
-;	mov rcx, 4192
-;	mov rdx, 0
-;	mov rdi, 0x200000
-;	call readsectors
-;	mov rsi, 0x200000
-;	mov rcx, 512
-;	call os_debug_dump_mem
-; DEV TESTING
-
-	mov rax, os_command_line	; Start the CLI
-	call os_smp_enqueue
+;	mov rax, os_command_line	; Start the CLI
+;	call os_smp_enqueue
 
 	; Fall through to ap_clear as align fills the space with No-Ops
 	; At this point the BSP is just like one of the AP's
@@ -232,16 +147,16 @@ ap_halt:				; Halt until a wakeup call is received
 	jmp ap_spin			; Try again
 
 ap_process:				; Set the status byte to "Busy" and run the code
-	cli
-	push rsi
-	push rax
-	mov rsi, [os_LocalAPICAddress]
-	xor eax, eax
-	mov al, 0x10
-	mov dword [rsi+0x80], eax	; APIC Task Priority Register (TPR)
-	pop rax
-	pop rsi
-	sti
+;	cli
+;	push rsi
+;	push rax
+;	mov rsi, [os_LocalAPICAddress]
+;	xor eax, eax
+;	mov al, 0x10
+;	mov dword [rsi+0x80], eax	; APIC Task Priority Register (TPR)
+;	pop rax
+;	pop rsi
+;	sti
 
 	push rdi			; Push RDI since it is used temporarily
 	push rax			; Push RAX since os_smp_get_id uses it
@@ -253,60 +168,10 @@ ap_process:				; Set the status byte to "Busy" and run the code
 	pop rax				; Pop RAX (holds the workload code address)
 	pop rdi				; Pop RDI (holds the variable/variable address)
 
-	mov r15, rax
-
-	call os_get_argc
-	mov rcx, rax
-	cmp al, 1
-	je noargs
-
-	mov rdi, os_args
-	sub rcx, 1
-	shl rcx, 3
-	add rdi, rcx
-	shr rcx, 3
-	add rcx, 1
-nextargv:
-	sub al, 1
-	call os_get_argv
-	mov [rdi], rsi
-	sub rdi, 8
-	cmp al, 1
-	jne nextargv
-
-noargs:
-	mov al, 0
-	call os_get_argv
-	mov [os_args], rsi
-	mov rsi, os_args		; ARGV[0]
-
-	mov rdi, rcx			; ARGC
-	mov rax, r15
-
 	call rax			; Run the code
-
-	; Check task list and restart CLI if needed
 
 	jmp ap_clear			; Reset the stack, clear the registers, and wait for something else to work on
 
-;hellofunc:
-;	push rsi
-;	push rcx
-;	push rax
-;
-;	mov rsi, readymsg
-;	call os_output	
-;	xor eax, eax
-;	mov rsi, os_EthernetBuffer
-;	lodsw
-;	mov rcx, rax
-;	call os_debug_dump_mem
-;	call os_print_newline
-;	
-;	pop rax
-;	pop rcx
-;	pop rsi
-;	ret
 
 ; Includes
 %include "init.asm"
