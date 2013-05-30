@@ -8,7 +8,7 @@ SOURCES=main.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=out.app
 BMFS=~/code/bmfs/bmfs
-VMHD=/home/a/VirtualBox\ VMs/BMOS/BMOS.vmdk
+VMHD=/home/a/VirtualBox\ VMs/BMOS/BMOS-flat.vmdk
 BMFSMBR=/home/a/code/pure64/bmfs_mbr.sys
 PXE=/home/a/code/pure64/pxestart.sys
 PURE64=/home/a/code/pure64/pure64.sys
@@ -37,8 +37,13 @@ install:
 vm: install 
 	#$(DD) if=/dev/zero of=$(VMHD) bs=512 count=32
 	$(DD) if=$(BMFSMBR) of=$(VMHD) bs=512 conv=notrunc
-	$(DD) if=$(PURE64) of=$(VMHD) bs=512 seek=16 conv=notrunc
-	$(DD) if=$(BMOS) of=$(VMHD) bs=512 seek=1024 conv=notrunc
+	$(CAT) $(PURE64) $(BMOS) > software.sys
+	$(DD) if=software.sys of=$(VMHD) bs=512 seek=16 conv=notrunc
+	#$(DD) if=$(PURE64) of=$(VMHD) bs=512 seek=16 conv=notrunc
+	#$(DD) if=$(BMOS) of=$(VMHD) bs=1 seek=1048576 conv=notrunc
+	#$(DD) if=$(BMOS) of=$(VMHD) bs=1 seek=6145 conv=notrunc
+	#$(DD) if=$(BMOS) of=$(VMHD) bs=512 seek=32 conv=notrunc
+
 
 format:
 	$(BMFS) $(VMHD) format
@@ -49,10 +54,13 @@ start:
 stop:
 	vboxmanage controlvm $(VM) poweroff
 
+reset:
+	cp -r ~/VirtualBox\ VMs/_backup/ ~/VirtualBox\ VMs/BMOS/
+
 dhcp:
-	$(CAT) $(PXE) $(PURE64) $(KERNEL64) > $(TFTP)
-	$(CAT) $(PXE) $(PURE64) $(KERNEL64) > ~/.VirtualBox/TFTP/$(VM).pxe
+	$(CAT) $(PXE) $(PURE64) $(BMOS) > $(TFTP)
+	$(CAT) $(PXE) $(PURE64) $(BMOS) > ~/.VirtualBox/TFTP/$(VM).pxe
 
 clean:
-	rm -rf *.o *.app $(EXECUTABLE)
+	rm -rf *.o *.app $(EXECUTABLE) *.sys
 	
