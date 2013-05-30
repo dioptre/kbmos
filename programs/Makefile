@@ -1,9 +1,9 @@
 CC=gcc
 LD=ld
 DD=dd
-CFLAGS=-c -Wall -I ~/code/bmos/newlib/newlib-2.0.0/newlib/libc/include -D _NON_BAREMETAL_
+CFLAGS=-c -Wall -I ~/code/bmos/newlib/newlib-2.0.0/newlib/libc/include/ -D _NON_BAREMETAL_
 LDFLAGS=-T ~/code/bmos/newlib/app.ld
-LIBDEPS=~/code/bmos/programs/libBareMetal.o ~/code/bmos/newlib/libc.a ~/code/bmos/newlib/crt0.o
+LIBDEPS=~/code/bmos/programs/libBareMetal.o ~/code/bmos/newlib/crt0.o ~/code/bmos/newlib/libc.a libcompiler_rt.a
 SOURCES=main.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=out.app
