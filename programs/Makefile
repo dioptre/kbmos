@@ -1,6 +1,7 @@
 CC=gcc
 LD=ld
 DD=dd
+NASM=nasm
 #CFLAGS=-c -Wall -I ~/code/compiler-rt/lib -D _NON_BAREMETAL_
 CFLAGS=-c -Wall -m64 -nostdlib -nostartfiles -nodefaultlibs -fomit-frame-pointer -mno-red-zone -I ~/code/bmos/newlib/newlib-2.0.0/newlib/libc/include/ -D _NON_BAREMETAL_
 LDFLAGS=-T ~/code/bmos/newlib/app.ld
@@ -18,9 +19,11 @@ PURE64D=/home/a/code/pure64
 PURE64=/home/a/code/pure64/pure64.sys
 BMOSD=/home/a/code/bmos/os
 BMOS=/home/a/code/bmos/os/kernel64.sys
+NEWLIBD=/home/a/code/bmos/newlib
 CAT=cat
 TFTP=/var/lib/tftpboot/pxeboot.bin
 VM=BMOS
+
 
 all: $(SOURCES) $(EXECUTABLE)
 	
@@ -70,8 +73,11 @@ dhcp:
 clean:
 	rm -rf *.o *.app $(EXECUTABLE) *.sys
 
+create:
+	cd $(NEWLIBD)/build; make
+	cd $(NEWLIBD); $(CC) -I newlib-2.0.0/newlib/libc/include/ -c crt0.c -o crt0.o
+	cd $(PURE64D); $(PURE64D)/build.sh
+	cd $(BMOSD);	$(NASM) kernel64.asm -o kernel64.sys
+
 remake: clean create all vm
 
-create:
-	cd $(PURE64D); $(PURE64D)/build.sh
-	cd $(BMOSD);	nasm kernel64.asm -o kernel64.sys
