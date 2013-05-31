@@ -1,28 +1,27 @@
+SOURCES=testx.c
+BMFS=/home/a/code/bmfs/bmfs
+BMOSD=/home/a/code/bmos/os
+VMHD=/home/a/VirtualBox\ VMs/BMOS/BMFS-256-flat.vmdk
+PURE64D=/home/a/code/pure64
+NEWLIBD=/home/a/code/bmos/newlib
+TFTP=/var/lib/tftpboot/pxeboot.bin
+VM=BMOS
+
+CAT=cat
 CC=gcc
 LD=ld
 DD=dd
 NASM=nasm
-#CFLAGS=-c -Wall -I ~/code/compiler-rt/lib -D _NON_BAREMETAL_
 CFLAGS=-c -Wall -m64 -nostdlib -nostartfiles -nodefaultlibs -fomit-frame-pointer -mno-red-zone -I ~/code/bmos/newlib/newlib-2.0.0/newlib/libc/include/ -D _NON_BAREMETAL_
 LDFLAGS=-T ~/code/bmos/newlib/app.ld
 #LIBDEPS=~/code/bmos/programs/libBareMetal.o ~/code/bmos/newlib/crt0.o libcompiler_rt.a
-LIBDEPS=~/code/bmos/programs/libBareMetal.o ~/code/bmos/newlib/crt0.o ~/code/bmos/newlib/libc.a 
-SOURCES=testx.c
+LIBDEPS=./libBareMetal.o $(NEWLIBD)/crt0.o $(NEWLIBD)/build/x86_64-pc-baremetal/newlib/libc.a 
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=$(SOURCES:.c=.app)
-BMFS=~/code/bmfs/bmfs
-BMFSMBR=/home/a/code/pure64/bmfs_mbr.sys
-VMHD=/home/a/VirtualBox\ VMs/BMOS/BMFS-256-flat.vmdk
-#VMHD=/home/a/VirtualBox\ VMs/BMOS/BMOS-flat.vmdk
-PXE=/home/a/code/pure64/pxestart.sys
-PURE64D=/home/a/code/pure64
-PURE64=/home/a/code/pure64/pure64.sys
-BMOSD=/home/a/code/bmos/os
-BMOS=/home/a/code/bmos/os/kernel64.sys
-NEWLIBD=/home/a/code/bmos/newlib
-CAT=cat
-TFTP=/var/lib/tftpboot/pxeboot.bin
-VM=BMOS
+PXE=$(PURE64D)/pxestart.sys
+PURE64=$(PURE64D)/pure64.sys
+BMFSMBR=$(PURE64D)/bmfs_mbr.sys
+BMOS=$(BMOSD)/kernel64.sys
 
 
 all: $(SOURCES) $(EXECUTABLE)
@@ -44,14 +43,9 @@ install: all
 	$(BMFS) $(VMHD) list
 
 vm: install 
-	#$(DD) if=/dev/zero of=$(VMHD) bs=512 count=32
 	$(DD) if=$(BMFSMBR) of=$(VMHD) bs=512 conv=notrunc
 	$(CAT) $(PURE64) $(BMOS) > software.sys
 	$(DD) if=software.sys of=$(VMHD) bs=512 seek=16 conv=notrunc
-	#$(DD) if=$(PURE64) of=$(VMHD) bs=512 seek=16 conv=notrunc
-	#$(DD) if=$(BMOS) of=$(VMHD) bs=1 seek=1048576 conv=notrunc
-	#$(DD) if=$(BMOS) of=$(VMHD) bs=1 seek=6145 conv=notrunc
-	#$(DD) if=$(BMOS) of=$(VMHD) bs=512 seek=32 conv=notrunc
 
 
 format:
@@ -75,7 +69,7 @@ clean:
 
 create:
 	cd $(NEWLIBD)/build; make
-	cd $(NEWLIBD); $(CC) -I newlib-2.0.0/newlib/libc/include/ -c crt0.c -o crt0.o
+	cd $(NEWLIBD); $(CC) -I $(NEWLIBD)/newlib-2.0.0/newlib/libc/include/ -c crt0.c -o crt0.o
 	cd $(PURE64D); $(PURE64D)/build.sh
 	cd $(BMOSD);	$(NASM) kernel64.asm -o kernel64.sys
 
