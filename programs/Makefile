@@ -14,7 +14,9 @@ BMFSMBR=/home/a/code/pure64/bmfs_mbr.sys
 VMHD=/home/a/VirtualBox\ VMs/BMOS/BMFS-256-flat.vmdk
 #VMHD=/home/a/VirtualBox\ VMs/BMOS/BMOS-flat.vmdk
 PXE=/home/a/code/pure64/pxestart.sys
+PURE64D=/home/a/code/pure64
 PURE64=/home/a/code/pure64/pure64.sys
+BMOSD=/home/a/code/bmos/os
 BMOS=/home/a/code/bmos/os/kernel64.sys
 CAT=cat
 TFTP=/var/lib/tftpboot/pxeboot.bin
@@ -69,3 +71,7 @@ clean:
 	rm -rf *.o *.app $(EXECUTABLE) *.sys
 
 remake: clean all install
+
+create:
+	cd $(PURE64D); $(PURE64D)/build.sh
+	cd $(BMOSD);	nasm kernel64.asm -o kernel64.sys
