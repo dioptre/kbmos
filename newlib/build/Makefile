@@ -380,7 +380,7 @@ WINDMC = windmc
 GNATBIND = no
 GNATMAKE = no
 
-CFLAGS = -g -O2 -mcmodel=large
+CFLAGS = -g -O2
 LDFLAGS = 
 LIBCFLAGS = $(CFLAGS)
 CXXFLAGS = -g -O2

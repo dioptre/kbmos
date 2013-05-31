@@ -1,15 +1,18 @@
 CC=gcc
 LD=ld
 DD=dd
-CFLAGS=-c -Wall -I ~/code/bmos/newlib/newlib-2.0.0/newlib/libc/include/ -D _NON_BAREMETAL_
+#CFLAGS=-c -Wall -I ~/code/compiler-rt/lib -D _NON_BAREMETAL_
+CFLAGS=-c -Wall -m64 -nostdlib -nostartfiles -nodefaultlibs -fomit-frame-pointer -mno-red-zone -I ~/code/bmos/newlib/newlib-2.0.0/newlib/libc/include/ -D _NON_BAREMETAL_
 LDFLAGS=-T ~/code/bmos/newlib/app.ld
-LIBDEPS=~/code/bmos/programs/libBareMetal.o ~/code/bmos/newlib/crt0.o ~/code/bmos/newlib/libc.a libcompiler_rt.a
-SOURCES=main.c
+#LIBDEPS=~/code/bmos/programs/libBareMetal.o ~/code/bmos/newlib/crt0.o libcompiler_rt.a
+LIBDEPS=~/code/bmos/programs/libBareMetal.o ~/code/bmos/newlib/crt0.o ~/code/bmos/newlib/libc.a 
+SOURCES=testx.c
 OBJECTS=$(SOURCES:.c=.o)
-EXECUTABLE=out.app
+EXECUTABLE=$(SOURCES:.c=.app)
 BMFS=~/code/bmfs/bmfs
-VMHD=/home/a/VirtualBox\ VMs/BMOS/BMOS-flat.vmdk
 BMFSMBR=/home/a/code/pure64/bmfs_mbr.sys
+VMHD=/home/a/VirtualBox\ VMs/BMOS/BMFS-256-flat.vmdk
+#VMHD=/home/a/VirtualBox\ VMs/BMOS/BMOS-flat.vmdk
 PXE=/home/a/code/pure64/pxestart.sys
 PURE64=/home/a/code/pure64/pure64.sys
 BMOS=/home/a/code/bmos/os/kernel64.sys
@@ -25,8 +28,9 @@ $(EXECUTABLE): $(OBJECTS)
 .c.o:
 	$(CC) -c -m64 -nostdlib -nostartfiles -nodefaultlibs -fomit-frame-pointer -mno-red-zone -o libBareMetal.o libBareMetal.c
 	$(CC) $(CFLAGS) $< -o $@
+	#clang -c -mno-red-zone -integrated-as -target x86_64-multi-arch-m64 -o helloc.o helloc.c
 
-install:
+install: all
 	$(BMFS) $(VMHD) list
 	$(BMFS) $(VMHD) delete $(EXECUTABLE)
 	# need to calculate file size
@@ -63,4 +67,5 @@ dhcp:
 
 clean:
 	rm -rf *.o *.app $(EXECUTABLE) *.sys
-	
+
+remake: clean all install
