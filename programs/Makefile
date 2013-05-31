@@ -1,9 +1,9 @@
 SOURCES=testx.c
 BMFS=/home/a/code/bmfs/bmfs
-BMOSD=/home/a/code/bmos/os
+BMOSD=/home/a/code/kbmos/os
 VMHD=/home/a/VirtualBox\ VMs/BMOS/BMFS-256-flat.vmdk
 PURE64D=/home/a/code/pure64
-NEWLIBD=/home/a/code/bmos/newlib
+NEWLIBD=/home/a/code/kbmos/newlib
 TFTP=/var/lib/tftpboot/pxeboot.bin
 VM=BMOS
 
@@ -68,7 +68,8 @@ clean:
 	rm -rf *.o *.app $(EXECUTABLE) *.sys
 
 create:
-	cd $(NEWLIBD)/build; make
+	cd $(NEWLIBD)/newlib-2.0.0/newlib/libc/sys;	autoconf;	cd baremetal; autoreconf
+	cd $(NEWLIBD)/build; rm -rf *; ../newlib-2.0.0/configure --target=x86_64-pc-baremetal --disable-multilib; sed -i 's/TARGET=x86_64-pc-baremetal-/TARGET=/g' Makefile; sed -i 's/WRAPPER) x86_64-pc-baremetal-/WRAPPER) /g' Makefile; make
 	cd $(NEWLIBD); $(CC) -I $(NEWLIBD)/newlib-2.0.0/newlib/libc/include/ -c crt0.c -o crt0.o
 	cd $(PURE64D); $(PURE64D)/build.sh
 	cd $(BMOSD);	$(NASM) kernel64.asm -o kernel64.sys
