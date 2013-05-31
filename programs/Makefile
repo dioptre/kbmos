@@ -70,7 +70,7 @@ dhcp:
 clean:
 	rm -rf *.o *.app $(EXECUTABLE) *.sys
 
-remake: clean create all install
+remake: clean create all vm
 
 create:
 	cd $(PURE64D); $(PURE64D)/build.sh
